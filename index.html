@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giáo Viên Chuyển Đổi Số - Các Công Cụ Dạy Học</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Nunito', 'sans-serif'] },
+                    colors: { primary: '#6b46c1', bgLight: '#f8fafc' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; }
+        .tool-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tool-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .badge-new { position: absolute; top: -10px; right: -10px; background-color: #ef4444; color: white; font-size: 0.7rem; font-weight: 900; padding: 4px 8px; border-radius: 6px; transform: rotate(12deg); box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); z-index: 10; border: 2px solid white; }
+        .badge-pro { position: absolute; top: 10px; left: 10px; background-color: #f97316; color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+        
+        /* Cấu hình sẵn 10 màu nền */
+        .icon-grad-1 { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+        .icon-grad-2 { background: linear-gradient(135deg, #1e1b4b, #312e81); }
+        .icon-grad-3 { background: linear-gradient(135deg, #10b981, #0ea5e9); }
+        .icon-grad-4 { background: linear-gradient(135deg, #d8b4fe, #e879f9); }
+        .icon-grad-5 { background: linear-gradient(135deg, #818cf8, #4f46e5); }
+        .icon-grad-6 { background: linear-gradient(135deg, #f97316, #ec4899); }
+        .icon-grad-7 { background: linear-gradient(135deg, #f43f5e, #ef4444); }
+        .icon-grad-8 { background: linear-gradient(135deg, #34d399, #10b981); }
+        .icon-grad-9 { background: linear-gradient(135deg, #fb923c, #dc2626); }
+        .icon-grad-10 { background: linear-gradient(135deg, #fca5a5, #f59e0b); }
+        
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6b46c1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer">
+                <span class="text-2xl font-black text-primary tracking-tight">Giáo Viên Chuyển Đổi Số</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="hidden md:flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition">
+                    <i class="fas fa-gamepad"></i> Tham gia (dành cho học sinh)
+                </button>
+                <button class="bg-primary hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-sm transition">Đăng nhập</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-black text-primary mb-4">Các Công Cụ Dạy Học</h1>
+            <p class="text-lg text-slate-500 font-medium">Khám phá các công cụ giáo dục hiện đại để nâng cao chất lượng giảng dạy</p>
+        </div>
+
+        <div id="loading-state" class="text-center py-10">
+            <div class="loader mb-4"></div>
+            <p class="text-slate-500 font-bold animate-pulse">Đang đồng bộ dữ liệu từ máy chủ...</p>
+        </div>
+
+        <div id="tools-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            </div>
+    </main>
+
+    <script>
+        // BƯỚC QUAN TRỌNG: DÁN URL WEB APP CỦA GOOGLE SHEET VÀO ĐÂY
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNtUB-1CehQR9tP5VGRylqCVI4UnIMf08GisPiQyLJbG249v-ie51DbTdMtQqdLA4J/exec";
+
+        // Hàm tải dữ liệu
+        async function fetchToolsData() {
+            try {
+                const response = await fetch(APP_SCRIPT_URL);
+                const data = await response.json();
+                renderTools(data);
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu:", error);
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 font-bold">❌ Không thể tải dữ liệu. Vui lòng kiểm tra lại đường dẫn API hoặc kết nối mạng.</p>`;
+            }
+        }
+
+        // Hàm vẽ giao diện HTML từ dữ liệu JSON lấy được
+        function renderTools(toolsList) {
+            const container = document.getElementById('tools-container');
+            const loading = document.getElementById('loading-state');
+            
+            // Ẩn hiệu ứng loading
+            loading.style.display = 'none';
+            container.innerHTML = ''; // Làm sạch container
+
+            toolsList.forEach(tool => {
+                // Xử lý icon: Nếu chứa "fa-" thì là FontAwesome, ngược lại coi như là Emoji
+                let iconHtml = tool.icon.includes('fa-') 
+                    ? `<i class="fas ${tool.icon}"></i>` 
+                    : tool.icon;
+
+                // Xử lý nhãn (Badge): Gán nhãn phù hợp
+                let badgeHtml = '';
+                if(tool.badge && tool.badge.toUpperCase() === 'NEW') {
+                    badgeHtml = `<div class="badge-new">NEW</div>`;
+                } else if(tool.badge && tool.badge.toUpperCase() === 'PRO') {
+                    badgeHtml = `<div class="badge-pro">PRO</div>`;
+                }
+
+                // Xử lý màu nền: Nếu để trống, lấy màu số 1 mặc định
+                let colorClass = tool.color ? tool.color : 'icon-grad-1';
+
+                // Tạo cấu trúc thẻ HTML
+                const cardHtml = `
+                    <a href="${tool.link}" class="tool-card relative bg-white p-6 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col h-full cursor-pointer group">
+                        ${badgeHtml}
+                        <div class="w-16 h-16 rounded-xl ${colorClass} flex items-center justify-center text-white text-3xl shadow-inner mb-5">
+                            ${iconHtml}
+                        </div>
+                        <h3 class="text-[1.15rem] font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">${tool.title}</h3>
+                        <p class="text-sm text-slate-500 font-medium leading-relaxed flex-grow">
+                            ${tool.description}
+                        </p>
+                    </a>
+                `;
+
+                // Chèn vào grid
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // Gọi hàm tự động khi trang tải xong
+        document.addEventListener("DOMContentLoaded", fetchToolsData);
+
+    </script>
+</body>
+</html>
